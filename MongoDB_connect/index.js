@@ -17,7 +17,6 @@ async function main() {
     await mongoose.connect("mongodb://127.0.0.1:27017/practiceDB"); // Connecting to MongoDB on port 27017 and making database named practiceDB
 }
 
-
 main().then(() =>{
     console.log("Connected to MongoDB successfully");
 })
@@ -93,7 +92,6 @@ app.put('/chats/:id' , async (req , res) =>{
     }
 });
 
-
 //  Delete Route
 app.delete('/chats/:id' , async (req , res) =>{
     try {
@@ -105,6 +103,7 @@ app.delete('/chats/:id' , async (req , res) =>{
         res.status(500).send("Error deleting chat message");
     }
 });
+
 
 app.listen(port , () =>{
     console.log(`Server is running on port ${port}`);

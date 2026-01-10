@@ -37,16 +37,17 @@ app.get('/' , (req , res) =>{
     res.send("Hello from Express server");
 });
 
-app.get('/chats' , async (req , res) =>{
-    try {
-        const chats = await Chat.find({}); // Fetching all chat messages from the database
-        console.log(chats);
-        res.render("chats" , { chats }); // Rendering the chats.ejs view and passing the chat messages
-    } catch (err) {
-        console.log(err);
-        res.status(500).send("Error retrieving chat messages");
+// baar baar try catch likhne ki jagh ye use karo. This is a higher order function jo ek async function lega aur uske andar agar koi error aata hai to wo next() ko call kar dega.
+function asyncWrap(fn){
+    return function(req , res , next){
+        fn(req , res , next).catch((err) => next(err));
     }
-});
+}
+
+app.get('/chats' , asyncWrap(async (req , res) =>{
+        const chats = await Chat.find({}); // Fetching all chat messages from the database
+        res.render("chats" , { chats }); // Rendering the chats.ejs view and passing the chat messages
+}));
 
 // Route to render form for new chat message
 app.get('/chats/new' , (req , res) =>{
@@ -54,8 +55,7 @@ app.get('/chats/new' , (req , res) =>{
 });
 
 // create Route
-app.post('/chats' , async (req , res) =>{
-    try {
+app.post('/chats' , asyncWrap(async (req , res) =>{
         const { from , to , message } = req.body;
         const newChat = new Chat({
             from : from,
@@ -65,44 +65,29 @@ app.post('/chats' , async (req , res) =>{
         });
         await newChat.save();   
         res.redirect('/chats'); // Redirecting to the chats page after saving
-    } catch (err) {
-        console.log(err);
-        res.status(500).send("Error saving chat message");
-    }
-});
+}));
 
 // Edit Route
-app.get('/chats/:id/edit' , async (req , res) =>{
+app.get('/chats/:id/edit' ,asyncWrap(async (req , res) =>{
         const { id } = req.params;  
         const chat = await Chat.findById(id);
         res.render("edit.ejs" , { chat });
-});
+}));
 
 // Update Route
-app.put('/chats/:id' , async (req , res) =>{
-    try {               
+app.put('/chats/:id' , asyncWrap(async (req , res) =>{              
         const { id } = req.params;
         const { message : newmessage } = req.body;
-
         await Chat.findByIdAndUpdate(id, { message: newmessage } , {  runValidators: true, new: true });
         res.redirect('/chats');
-    } catch (err) {
-        console.log(err);
-        res.status(500).send("Error updating chat message");
-    }
-});
+}));
 
 //  Delete Route
-app.delete('/chats/:id' , async (req , res) =>{
-    try {
+app.delete('/chats/:id' ,asyncWrap(async (req , res) =>{
         const { id } = req.params;
         await Chat.findByIdAndDelete(id);
         res.redirect('/chats');
-    } catch (err) {
-        console.log(err);
-        res.status(500).send("Error deleting chat message");
-    }
-});
+}));
 
 
 app.listen(port , () =>{
